@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EC PRIME BURGUER - Cardápio Digital</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .cart-modal { display: none; }
+        .cart-modal.active { display: flex; }
+    </style>
+</head>
+<body class="bg-zinc-900 text-white font-sans">
+
+    <header class="w-full h-[300px] bg-cover bg-center flex flex-col justify-center items-center" style="background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1571091718767-18b5b1457add?q=80&w=1000')">
+        <h1 class="text-4xl mt-4 mb-2 font-bold text-yellow-500">EC PRIME BURGUER</h1>
+        <div class="bg-green-500 px-4 py-1 rounded-lg" id="status-loja">
+            <span class="font-medium">Aberto agora</span>
+        </div>
+    </header>
+
+    <h2 class="text-2xl md:text-3xl font-bold text-center mt-9 mb-6">Conheça nosso menu</h2>
+
+    <main class="grid grid-cols-1 md:grid-cols-2 gap-7 md:gap-10 mx-auto max-w-7xl px-2 mb-16">
+        
+        <div class="flex gap-2 bg-zinc-800 p-3 rounded-xl">
+            <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=200" alt="Burger Prime" class="w-28 h-28 rounded-md hover:scale-110 duration-300"/>
+            <div class="w-full">
+                <p class="font-bold">Prime Bacon</p>
+                <p class="text-sm">Pão brioche, blend 180g, muito bacon e queijo cheddar.</p>
+                <div class="flex items-center justify-between mt-3">
+                    <p class="font-bold text-lg">R$ 35.00</p>
+                    <button class="bg-yellow-500 px-4 py-1 rounded add-to-cart-btn" data-name="Prime Bacon" data-price="35.00">
+                        <i class="fa fa-cart-plus"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex gap-2 bg-zinc-800 p-3 rounded-xl">
+            <img src="https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=200" alt="Cheeseburger" class="w-28 h-28 rounded-md hover:scale-110 duration-300"/>
+            <div class="w-full">
+                <p class="font-bold">Salad Prime</p>
+                <p class="text-sm">Pão, carne 160g, alface, tomate e maionese da casa.</p>
+                <div class="flex items-center justify-between mt-3">
+                    <p class="font-bold text-lg">R$ 28.00</p>
+                    <button class="bg-yellow-500 px-4 py-1 rounded add-to-cart-btn" data-name="Salad Prime" data-price="28.00">
+                        <i class="fa fa-cart-plus"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="fixed bottom-0 w-full bg-red-600 py-3 flex items-center justify-center z-40">
+        <button id="cart-btn" class="flex items-center gap-2 text-white font-bold">
+            (<span id="cart-count">0</span>) Ver carrinho
+            <i class="fa fa-cart-shopping text-lg"></i>
+        </button>
+    </header>
+
+    <div id="cart-modal" class="cart-modal fixed top-0 left-0 w-full h-full bg-black/50 z-[99] items-center justify-center">
+        <div class="bg-zinc-800 p-5 rounded-md min-w-[90%] md:min-w-[600px] text-white">
+            <h2 class="text-center font-bold text-2xl mb-2">Meu Carrinho</h2>
+            <div id="cart-items" class="flex justify-between mb-4 flex-col max-h-[400px] overflow-y-auto"></div>
+            <p class="font-bold">Total: <span id="cart-total">0.00</span></p>
+            
+            <div class="flex items-center justify-between mt-4">
+                <button id="close-modal-btn" class="border px-4 py-1 rounded">Fechar</button>
+                <button id="checkout-btn" class="bg-green-500 text-white px-4 py-1 rounded font-bold">Finalizar Pedido</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const cartBtn = document.getElementById("cart-btn");
+        const cartModal = document.getElementById("cart-modal");
+        const cartItemsContainer = document.getElementById("cart-items");
+        const cartTotal = document.getElementById("cart-total");
+        const checkoutBtn = document.getElementById("checkout-btn");
+        const closeModalBtn = document.getElementById("close-modal-btn");
+        const cartCount = document.getElementById("cart-count");
+        const statusLoja = document.getElementById("status-loja");
+
+        let cart = [];
+
+        // Lógica de Horário (Ex: Abre as 18h e fecha as 23h)
+        const hora = new Date().getHours();
+        const isOpen = hora >= 18 && hora < 23;
+
+        if(!isOpen){
+            statusLoja.classList.remove("bg-green-500");
+            statusLoja.classList.add("bg-red-500");
+            statusLoja.innerHTML = "<span class='font-medium text-white'>Fechado - Agende seu pedido</span>";
+            checkoutBtn.innerHTML = "Agendar para mais tarde";
+            checkoutBtn.classList.replace("bg-green-500", "bg-yellow-600");
+        }
+
+        cartBtn.addEventListener("click", () => { cartModal.classList.add("active"); });
+        closeModalBtn.addEventListener("click", () => { cartModal.classList.remove("active"); });
+
+        document.querySelectorAll(".add-to-cart-btn").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const name = btn.getAttribute("data-name");
+                const price = parseFloat(btn.getAttribute("data-price"));
+                addToCart(name, price);
+            });
+        });
+
+        function addToCart(name, price){
+            cart.push({ name, price });
+            updateCart();
+        }
+
+        function updateCart(){
+            cartItemsContainer.innerHTML = "";
+            let total = 0;
+            cart.forEach(item => {
+                const element = document.createElement("div");
+                element.innerHTML = `<div class='flex justify-between mb-2'><div><p class='font-bold'>${item.name}</p></div><p>R$ ${item.price.toFixed(2)}</p></div>`;
+                total += item.price;
+                cartItemsContainer.appendChild(element);
+            });
+            cartTotal.textContent = total.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+            cartCount.textContent = cart.length;
+        }
+
+        checkoutBtn.addEventListener("click", () => {
+            if(cart.length === 0) return;
+            const msg = cart.map(item => `${item.name} (R$ ${item.price})`).join("%0A");
+            const total = cartTotal.textContent;
+            const status = isOpen ? "PEDIDO NOVO" : "AGENDAMENTO";
+            window.open(`https://wa.me/5581997710825?text=*${status}*%0A${msg}%0A*Total: ${total}*`);
+        });
+    </script>
+</body>
+</html>
+# Erick.github.io
